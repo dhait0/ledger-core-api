@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReconciliationStatus {
+  OPEN
+  MATCHED
+  EXCEPTION
+  ESCALATED
+}
+
+enum ReconciliationPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Reconciliation {
+  id             String                 @id @default(cuid())
+  reference      String                 @unique
+  sourceSystem   String
+  targetSystem   String
+  amountCents    Int
+  currency       String
+  status         ReconciliationStatus
+  priority       ReconciliationPriority
+  ownerTeam      String
+  openedAt       DateTime
+  resolvedAt     DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  events         ReconciliationEvent[]
+}
+
+model ReconciliationEvent {
+  id                String         @id @default(cuid())
+  reconciliationId  String
+  type              String
+  message           String
+  messageEs         String
+  actor             String
+  createdAt         DateTime       @default(now())
+  reconciliation    Reconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+}
